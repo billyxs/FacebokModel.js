@@ -187,26 +187,29 @@ App.FacebookModel = Backbone.Model.extend({
     if (typeof callback != "function")
       return;
     if (this.get('status') == 'connected' && this.get('user')) {
+      console.log("status user");
       callback(true);
     } else {
       this.set({status: null}, {silent: true});
       this.once("change:status", _.bind(function (model, value) {
         console.log('isConnected listener value', value, 'status:', this.get('status'), 'authresponse:', this.get('authResponse'));
         if (this.get('status') === "connected") {
-          callback(true);
+          console.log("get user ");
+          // get user data before sending back true
+          this.once("change:user", _.bind(function () {
+            callback(true);
+          }), this);
+          this.getUserData();
         } else {
           callback(false);
-          // silently reset the values
-//                  this.set({
-//                      authResponse: null
-//                      ,status: null
-//                  }, {silent:true});
         }
       }, this));
       // make sure the SDK has loaded and the FB object is defined
       if (this.get('scriptLoaded') === true) {
+        console.log("script loaded");
         this.login();
       } else {
+        console.log("wait for script");
         // once we know the SDK has loaded we can init the Router
         this.once('change:scriptLoaded', _.bind(function () {
           this.login();
